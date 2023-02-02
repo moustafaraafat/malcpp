@@ -1,6 +1,10 @@
 #include <iostream>
 #include <string>
 
+#include "linenoise.hpp"
+
+constexpr auto g_line_history_path = "line_history.txt";
+
 std::string READ(std::string const& input)
 {
     return input;
@@ -25,11 +29,15 @@ std::string rep(std::string const& input)
 
 int main()
 {
+    linenoise::LoadHistory(g_line_history_path);
+
     while (true) {
-        std::cout << "user> ";
         std::string input;
-        if (!std::getline(std::cin, input))
+        if (linenoise::Readline("user> ", input))
             break;
         std::cout << rep(input) << '\n';
+        linenoise::AddHistory(input.c_str());
     }
+
+    linenoise::SaveHistory(g_line_history_path);
 }
