@@ -42,6 +42,8 @@ MalType* read_form(Reader& reader)
         return read_quote_value(reader, "deref");
     else if (token == "^")
         return read_with_meta(reader);
+    else if (is_number(token))
+        return read_integer(reader);
     else
         return read_atom(reader);
 }
@@ -129,5 +131,24 @@ MalHashMap* read_hash_map(Reader& reader)
 
 MalType* read_atom(Reader& reader)
 {
-    return new MalSymbol { reader.next() };
+    return new MalSymbol { reader.next() }; // TODO: Time for a read_symbol()?
+}
+
+MalType* read_integer(Reader& reader)
+{
+    auto token = reader.next();
+    long int extracted_number { 0 };
+    auto [ptr, error_code] = std::from_chars(token.begin(), token.end(), extracted_number);
+    if (error_code == std::errc())
+        return new MalInteger { extracted_number };
+
+    std::cerr << "EOF, read_integer(): error while reading a number. Should never happen!\n";
+    return {};
+}
+
+
+bool is_number(std::string_view str)
+{
+    // A naive way to test if str is a number
+    return (str.at(0) >= '0' && str.at(0) <= '9') || (str.at(0) == '-' && str.length() > 1 && (str.at(1) >= '0' && str.at(1) <= '9'));
 }
