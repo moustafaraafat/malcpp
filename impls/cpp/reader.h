@@ -180,5 +180,8 @@ MalType* read_with_meta(Reader& reader);
 MalVector* read_vector(Reader& reader);
 MalHashMap* read_hash_map(Reader& reader);
 MalType* read_atom(Reader& reader);
+MalType* read_nil(Reader& reader);
+MalType* read_false(Reader& reader);
+MalType* read_true(Reader& reader);
 
 bool is_number(std::string_view str);

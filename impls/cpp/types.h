@@ -17,6 +17,9 @@ public:
         Vector,
         HashMap,
         Symbol,
+        Nil,
+        False,
+        True,
         Integer,
         Functiion
     };
@@ -155,6 +158,27 @@ public:
 
 private:
     std::string m_str;
+};
+
+class MalNil : public MalType {
+public:
+    std::string inspect() const override { return "nil"; }
+
+    Type type() const override { return Type::Nil; }
+};
+
+class MalFalse : public MalType {
+public:
+    std::string inspect() const override { return "false"; }
+
+    Type type() const override { return Type::False; }
+};
+
+class MalTrue : public MalType {
+public:
+    std::string inspect() const override { return "true"; }
+
+    Type type() const override { return Type::True; }
 };
 
 class MalInteger : public MalType {

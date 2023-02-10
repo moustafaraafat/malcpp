@@ -42,6 +42,12 @@ MalType* read_form(Reader& reader)
         return read_quote_value(reader, "deref");
     else if (token == "^")
         return read_with_meta(reader);
+    else if (token == "nil")
+        return read_nil(reader);
+    else if (token == "false")
+        return read_false(reader);
+    else if (token == "true")
+        return read_true(reader);
     else if (is_number(token))
         return read_integer(reader);
     else
@@ -134,6 +140,24 @@ MalType* read_atom(Reader& reader)
     return new MalSymbol { reader.next() }; // TODO: Time for a read_symbol()?
 }
 
+MalType* read_nil(Reader& reader)
+{
+    reader.next();
+    return new MalNil();
+}
+
+MalType* read_false(Reader& reader)
+{
+    reader.next();
+    return new MalFalse();
+}
+
+MalType* read_true(Reader& reader)
+{
+    reader.next();
+    return new MalTrue();
+}
+
 MalType* read_integer(Reader& reader)
 {
     auto token = reader.next();
@@ -145,7 +169,6 @@ MalType* read_integer(Reader& reader)
     std::cerr << "EOF, read_integer(): error while reading a number. Should never happen!\n";
     return {};
 }
-
 
 bool is_number(std::string_view str)
 {
