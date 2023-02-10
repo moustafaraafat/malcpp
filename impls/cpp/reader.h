@@ -48,31 +48,6 @@ public:
             case '^':
             case '@':
                 return input_view.substr(m_index++, 1);
-            case '-':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9': {
-                // TODO: For 123foo, it'll be extracted as '123, foo' tokens, check whether we're okay with that.
-                // FIXME: It's wasteful, to use std::from_chars() just to know the length of the number. However, it may be useful for float types.
-                long int extracted_number { 0 };
-                auto [ptr, error_code] = std::from_chars(input_view.begin() + m_index, input_view.end(), extracted_number);
-                if (error_code == std::errc()) {
-                    auto first_number_index = m_index;
-                    auto number_length = std::distance(input_view.begin() + m_index, ptr);
-                    m_index += number_length;
-                    return input_view.substr(first_number_index, number_length);
-                }
-                if (c == '-')
-                     return input_view.substr(m_index++, 1); // It was just a negative sign.
-                std::cerr << "EOF, error while reading a number!\n";
-                break;
-            }
             case '"': {
                 auto first_quote_index = m_index;
                 ++m_index;
@@ -104,6 +79,28 @@ public:
                 auto semicolon_index = m_index;
                 m_index = m_input.length();
                 return input_view.substr(semicolon_index, m_input.length() - semicolon_index);
+            }
+            case '-':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9': {
+                // TODO: For 123foo, it'll be extracted as '123, foo' tokens, check whether we're okay with that.
+                // FIXME: It's wasteful, to use std::from_chars() just to know the length of the number. However, it may be useful for float types.
+                long int extracted_number { 0 };
+                auto [ptr, error_code] = std::from_chars(input_view.begin() + m_index, input_view.end(), extracted_number);
+                if (error_code == std::errc()) {
+                    auto first_number_index = m_index;
+                    auto number_length = std::distance(input_view.begin() + m_index, ptr);
+                    m_index += number_length;
+                    return input_view.substr(first_number_index, number_length);
+                }
+                [[fallthrough]]; // To handle inputs like `-` or `-abc`.
             }
             default: {
                 auto first_index = m_index;
