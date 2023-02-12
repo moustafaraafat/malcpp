@@ -21,11 +21,13 @@ public:
         False,
         True,
         Integer,
-        Functiion
+        Functiion,
+        String
     };
 
     virtual std::string inspect() const = 0;
     virtual Type type() const = 0;
+    virtual bool operator==(MalType const&) const = 0;
 };
 
 class MalList : public MalType {
@@ -48,6 +50,19 @@ public:
         return result;
     }
 
+    bool operator==(MalType const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        if (size() != static_cast<MalList const&>(other).size())
+            return false;
+        for (std::size_t i = 0; i < size(); ++i) {
+            if (*m_list[i] != *static_cast<MalList const&>(other).m_list[i])
+                return false;
+        }
+        return true;
+    }
+
     // TODO: Add the other 4? const ones.
     auto begin() { return m_list.begin(); }
     auto end() { return m_list.end(); }
@@ -57,7 +72,7 @@ public:
     auto data() { return m_list.data(); }
 
     auto empty() const { return m_list.empty(); }
-    auto size() const { return m_list.size(); }
+    std::size_t size() const { return m_list.size(); }
 
     Type type() const override { return Type::List; }
 
@@ -85,8 +100,22 @@ public:
         return result;
     }
 
+    bool operator==(MalType const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        if (size() != static_cast<MalVector const&>(other).size())
+            return false;
+        for (std::size_t i = 0; i < size(); ++i) {
+            if (*m_list[i] != *static_cast<MalVector const&>(other).m_list[i])
+                return false;
+        }
+        return true;
+    }
+
     auto begin() { return m_list.begin(); }
     auto end() { return m_list.end(); }
+    std::size_t size() const { return m_list.size(); }
 
     Type type() const override { return Type::Vector; }
 
@@ -136,6 +165,12 @@ public:
         return result;
     }
 
+    bool operator==(MalType const&) const override
+    {
+        // TODO
+        return false;
+    }
+
     auto begin() { return m_hash_map.begin(); }
     auto end() { return m_hash_map.end(); }
 
@@ -152,6 +187,13 @@ public:
     {
     }
 
+    bool operator==(MalType const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        return m_str == static_cast<MalSymbol const&>(other).m_str;
+    }
+
     std::string inspect() const override { return m_str; }
 
     Type type() const override { return Type::Symbol; }
@@ -160,8 +202,35 @@ private:
     std::string m_str;
 };
 
+class MalString : public MalType {
+public:
+    MalString(std::string_view str)
+        : m_str(str)
+    {
+    }
+
+    bool operator==(MalType const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        return m_str == static_cast<MalString const&>(other).m_str;
+    }
+
+    std::string inspect() const override { return m_str; }
+
+    Type type() const override { return Type::String; }
+
+private:
+    std::string m_str;
+};
+
 class MalNil : public MalType {
 public:
+    bool operator==(MalType const& other) const override
+    {
+        return type() == other.type();
+    }
+
     std::string inspect() const override { return "nil"; }
 
     Type type() const override { return Type::Nil; }
@@ -169,6 +238,11 @@ public:
 
 class MalFalse : public MalType {
 public:
+    bool operator==(MalType const& other) const override
+    {
+        return type() == other.type();
+    }
+
     std::string inspect() const override { return "false"; }
 
     Type type() const override { return Type::False; }
@@ -176,6 +250,11 @@ public:
 
 class MalTrue : public MalType {
 public:
+    bool operator==(MalType const& other) const override
+    {
+        return type() == other.type();
+    }
+
     std::string inspect() const override { return "true"; }
 
     Type type() const override { return Type::True; }
@@ -188,6 +267,12 @@ public:
     {
     }
 
+    bool operator==(MalType const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        return m_long == static_cast<MalInteger const&>(other).m_long;
+    }
 
     std::string inspect() const override { return std::to_string(value()); }
 
@@ -208,9 +293,16 @@ public:
     {
     }
 
+    bool operator==(MalType const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        return true;
+    }
+
     Type type() const override { return Type::Functiion; }
 
-    std::string inspect() const override { return "MalFunction"; }
+    std::string inspect() const override { return "#<function>"; }
 
     MalFunctionPtr function_ptr() const { return  m_function_ptr; }
 

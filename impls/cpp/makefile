@@ -1,4 +1,4 @@
-CXXFLAGS ?= -g -O2 -Werror -Wall -Wextra -std=c++20
+CXXFLAGS ?= -g -Og -Werror -Wall -Wextra -std=c++20
 
 build: step0_repl step1_read_print step2_eval step3_env step4_if_fn_do
 
@@ -14,6 +14,6 @@ step2_eval: step2_eval.cpp reader.cpp reader.h printer.cpp printer.h types.h
 step3_env: step3_env.cpp reader.cpp reader.h printer.cpp printer.h types.h env.h
 	$(CXX) $(CXXFLAGS) -o step3_env step3_env.cpp reader.cpp printer.cpp
 
-step4_if_fn_do: step4_if_fn_do.cpp reader.cpp reader.h printer.cpp printer.h types.h env.h
-	$(CXX) $(CXXFLAGS) -o step4_if_fn_do step4_if_fn_do.cpp reader.cpp printer.cpp
+step4_if_fn_do: step4_if_fn_do.cpp reader.cpp reader.h printer.cpp printer.h types.h env.h core.cpp core.h
+	$(CXX) $(CXXFLAGS) -o step4_if_fn_do step4_if_fn_do.cpp reader.cpp printer.cpp core.cpp
 

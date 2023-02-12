@@ -50,6 +50,8 @@ MalType* read_form(Reader& reader)
         return read_true(reader);
     else if (is_number(token))
         return read_integer(reader);
+    else if (token.at(0) == '"')
+        return read_string(reader);
     else
         return read_atom(reader);
 }
@@ -138,6 +140,11 @@ MalHashMap* read_hash_map(Reader& reader)
 MalType* read_atom(Reader& reader)
 {
     return new MalSymbol { reader.next() }; // TODO: Time for a read_symbol()?
+}
+
+MalType* read_string(Reader& reader)
+{
+    return new MalString { reader.next() };
 }
 
 MalType* read_nil(Reader& reader)

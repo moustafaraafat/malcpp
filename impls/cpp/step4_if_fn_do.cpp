@@ -8,6 +8,7 @@
 #include "reader.h"
 #include "printer.h"
 #include "types.h"
+#include "core.h"
 
 constexpr auto g_line_history_path = "line_history.txt";
 
@@ -50,6 +51,8 @@ MalType* eval_ast(MalType* ast, Env& env)
 
 MalType* EVAL(MalType* ast, Env& env)
 {
+    if (!ast)
+        return nullptr;
     if (ast->type() != MalType::Type::List)
         return eval_ast(ast, env);
 
@@ -82,6 +85,40 @@ MalType* EVAL(MalType* ast, Env& env)
         return EVAL(ast_as_list->at(2), let_env);
     }
 
+    if (ast_as_list->at(0)->inspect() == "do") {
+        // Evaluate all the elements of the list using eval_ast and return the final evaluated element.
+        MalType* value = nullptr;
+        for (std::size_t i = 1; i < ast_as_list->size(); ++i)
+            value = EVAL(ast_as_list->at(i), env);
+        return value;
+    }
+
+    if (ast_as_list->at(0)->inspect() == "if") {
+        // Evaluate the first parameter (second element).
+        auto* result = EVAL(ast_as_list->at(1), env);
+        // If the result (condition) is anything other than nil or false,
+        // then evaluate the second parameter (third element of the list) and return the result.
+        if (result->inspect() != "nil" && result->inspect() != "false")
+            return EVAL(ast_as_list->at(2), env);
+        // Otherwise, evaluate the third parameter (fourth element) and return the result.
+        if (ast_as_list->size() >= 4)
+            return EVAL(ast_as_list->at(3), env);
+        // If condition is false and there is no third parameter, then just return nil.
+        return new MalNil();
+    }
+
+    if (ast_as_list->at(0)->inspect() == "fn*") {
+        // Return a new function closure.
+        auto function_closure = [&env, ast_as_list](size_t argc, MalType** argv) {
+            auto exprs = new MalList {};
+            for (std::size_t i = 0; i < argc; ++i)
+                exprs->push(argv[i]);
+            auto new_env = new Env { &env, static_cast<MalList*>(ast_as_list->at(1)), exprs};
+            return EVAL(ast_as_list->at(2), *new_env);
+        };
+        return new MalFunction { function_closure };
+    }
+
     auto* new_list = static_cast<MalList*>(eval_ast(ast, env));
     auto fn = static_cast<MalFunction*>(new_list->at(0))->function_ptr();
     return fn(new_list->size() - 1, new_list->data() + 1);
@@ -90,63 +127,6 @@ MalType* EVAL(MalType* ast, Env& env)
 std::string PRINT(MalType* input)
 {
     return pr_str(input);
-}
-
-MalType* add(size_t argc, MalType** argv)
-{
-    assert(argc == 2);
-
-    auto* a = argv[0];
-    auto* b = argv[1];
-
-    assert(a->type() == MalType::Type::Integer);
-    assert(b->type() == MalType::Type::Integer);
-
-    auto a_value = static_cast<MalInteger*>(a)->value();
-    auto b_value = static_cast<MalInteger*>(b)->value();
-    return new MalInteger(a_value + b_value);
-}
-
-MalType* subtract(size_t argc, MalType** argv)
-{
-    assert(argc == 2);
-
-    auto* a = argv[0];
-    auto* b = argv[1];
-
-    auto a_value = static_cast<MalInteger*>(a)->value();
-    auto b_value = static_cast<MalInteger*>(b)->value();
-    return new MalInteger(a_value - b_value);
-}
-
-MalType* multiply(size_t argc, MalType** argv)
-{
-    assert(argc == 2);
-
-    auto* a = argv[0];
-    auto* b = argv[1];
-
-    assert(a->type() == MalType::Type::Integer);
-    assert(b->type() == MalType::Type::Integer);
-
-    auto a_value = static_cast<MalInteger*>(a)->value();
-    auto b_value = static_cast<MalInteger*>(b)->value();
-    return new MalInteger(a_value * b_value);
-}
-
-MalType* divide(size_t argc, MalType** argv)
-{
-    assert(argc == 2);
-
-    auto* a = argv[0];
-    auto* b = argv[1];
-
-    assert(a->type() == MalType::Type::Integer);
-    assert(b->type() == MalType::Type::Integer);
-
-    auto a_value = static_cast<MalInteger*>(a)->value();
-    auto b_value = static_cast<MalInteger*>(b)->value();
-    return new MalInteger(a_value / b_value);
 }
 
 std::string rep(std::string& input, Env& env)
@@ -167,11 +147,10 @@ int main()
     linenoise::LoadHistory(g_line_history_path);
 
     Env env {nullptr};
-    env.set(new MalSymbol("+"), new MalFunction (add));
-    env.set(new MalSymbol("-"), new MalFunction (subtract));
-    env.set(new MalSymbol("*"), new MalFunction (multiply));
-    env.set(new MalSymbol("/"), new MalFunction (divide));
-
+    for (auto [symbol, function] : create_core_functions())
+        env.set(symbol, function);
+    std::string not_function = "(def! not (fn* (a) (if a false true)))";
+    rep(not_function, env);
     while (true) {
         std::string input;
         if (linenoise::Readline("user> ", input))

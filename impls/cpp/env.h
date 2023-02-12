@@ -6,11 +6,15 @@
 
 class Env {
 public:
-    Env(Env* outer)
+    Env(Env* outer, MalList* binds = nullptr, MalList* exprs = nullptr)
         : m_outer_env(outer)
     {
-
+        if (!binds || !exprs)
+            return;
+        for (std::size_t i = 0; i < binds->size(); ++i)
+            m_data.insert_or_assign(static_cast<MalSymbol*>(binds->at(i)), exprs->at(i));
     }
+
     void set(MalSymbol* key, MalType* value)
     {
         m_data.insert_or_assign(key, value);
