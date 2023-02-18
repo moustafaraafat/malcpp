@@ -1,6 +1,7 @@
 #pragma once
 
 #include <charconv>
+#include <cassert>
 #include <iostream>
 #include <string>
 #include <string_view>
@@ -55,8 +56,19 @@ public:
                 while (!found_closing_quote && m_index < m_input.length()) {
                     switch (m_input.at(m_index)) {
                         case '\\':
-                            if (m_index + 1 < m_input.length() && m_input.at(m_index) == '\\') // Double backslash case, should return them as one.
-                                ++m_index;
+                            switch (m_input.at(m_index + 1)) {
+                                case '"':
+                                    m_input.replace(m_index, 2, "\"");
+                                    break;
+                                case 'n':
+                                    m_input.replace(m_index, 2, "\n");
+                                    break;
+                                case '\\':
+                                    m_input.replace(m_index, 2, "\\");
+                                    break;
+                                default:
+                                    assert(0);
+                            }
                             break;
                         case '"':
                             found_closing_quote = true;
@@ -181,6 +193,7 @@ MalVector* read_vector(Reader& reader);
 MalHashMap* read_hash_map(Reader& reader);
 MalType* read_atom(Reader& reader);
 MalType* read_string(Reader& reader);
+MalType* read_keyword(Reader& reader);
 MalType* read_nil(Reader& reader);
 MalType* read_false(Reader& reader);
 MalType* read_true(Reader& reader);

@@ -22,10 +22,11 @@ public:
         True,
         Integer,
         Functiion,
-        String
+        String,
+        Keyword
     };
 
-    virtual std::string inspect() const = 0;
+    virtual std::string inspect(bool print_readably = false) const = 0;
     virtual Type type() const = 0;
     virtual bool operator==(MalType const&) const = 0;
 };
@@ -37,11 +38,11 @@ public:
         m_list.push_back(mal_type);
     }
 
-    std::string inspect() const override
+    std::string inspect(bool print_readably = false) const override
     {
         std::string result = "(";
         for (auto* mal_type : m_list)
-            result.append(mal_type->inspect() + " ");
+            result.append(mal_type->inspect(print_readably) + " ");
 
         if (m_list.size() > 0)
             result[result.length() - 1] = ')';
@@ -52,7 +53,7 @@ public:
 
     bool operator==(MalType const& other) const override
     {
-        if (type() != other.type())
+        if (type() != other.type() && other.type() != Type::Vector)
             return false;
         if (size() != static_cast<MalList const&>(other).size())
             return false;
@@ -87,11 +88,11 @@ public:
         m_list.push_back(mal_type);
     }
 
-    std::string inspect() const override
+    std::string inspect(bool print_readably = false) const override
     {
         std::string result = "[";
         for (auto* mal_type : m_list)
-            result.append(mal_type->inspect() + " ");
+            result.append(mal_type->inspect(print_readably) + " ");
 
         if (m_list.size() > 0)
             result[result.length() - 1] = ']';
@@ -102,7 +103,7 @@ public:
 
     bool operator==(MalType const& other) const override
     {
-        if (type() != other.type())
+        if (type() != other.type() && other.type() != Type::List)
             return false;
         if (size() != static_cast<MalVector const&>(other).size())
             return false;
@@ -126,14 +127,14 @@ private:
 struct HashMalHashMap {
     std::size_t operator()(MalType* key) const noexcept
     {
-        return std::hash<std::string>{}(key->inspect());
+        return std::hash<std::string>{}(key->inspect(false));
     }
 };
 
 struct MalHashMapComparator {
     constexpr bool operator()(MalType* lhs, MalType* rhs) const
     {
-        return lhs->inspect() == rhs->inspect();
+        return lhs->inspect(false) == rhs->inspect(false);
     }
 };
 
@@ -152,11 +153,11 @@ public:
         return {};
     }
 
-    std::string inspect() const override
+    std::string inspect(bool print_readably = false) const override
     {
         std::string result = "{";
         for (auto [key, value] : m_hash_map)
-            result.append(key->inspect() + " " + value->inspect() + " ");
+            result.append(key->inspect(print_readably) + " " + value->inspect(print_readably) + " ");
 
         if (m_hash_map.size() > 0)
             result[result.length() - 1] = '}';
@@ -194,9 +195,31 @@ public:
         return m_str == static_cast<MalSymbol const&>(other).m_str;
     }
 
-    std::string inspect() const override { return m_str; }
+    std::string inspect([[maybe_unused]]bool print_readably = false) const override { return m_str; }
 
     Type type() const override { return Type::Symbol; }
+
+private:
+    std::string m_str;
+};
+
+class MalKeyword : public MalType {
+public:
+    MalKeyword(std::string_view str)
+        : m_str(str)
+    {
+    }
+
+    bool operator==(MalType const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        return m_str == static_cast<MalKeyword const&>(other).m_str;
+    }
+
+    std::string inspect([[maybe_unused]]bool print_readably = false) const override { return m_str; }
+
+    Type type() const override { return Type::Keyword; }
 
 private:
     std::string m_str;
@@ -216,7 +239,30 @@ public:
         return m_str == static_cast<MalString const&>(other).m_str;
     }
 
-    std::string inspect() const override { return m_str; }
+    std::string inspect(bool print_readably = false) const override {
+        if (!print_readably)
+            return m_str;
+
+        std::string result;
+        for (auto c : m_str) {
+            switch (c) {
+                case '"':
+                    result += "\\\"";
+                    break;
+                case '\n':
+                    result += "\\n";
+                    break;
+                case '\\':
+                    result += "\\\\";
+                    break;
+                default:
+                    result += c;
+                    break;
+            }
+        }
+        result = "\"" + result + "\"";
+        return result;
+    }
 
     Type type() const override { return Type::String; }
 
@@ -231,7 +277,7 @@ public:
         return type() == other.type();
     }
 
-    std::string inspect() const override { return "nil"; }
+    std::string inspect([[maybe_unused]]bool print_readably = false) const override { return "nil"; }
 
     Type type() const override { return Type::Nil; }
 };
@@ -243,7 +289,7 @@ public:
         return type() == other.type();
     }
 
-    std::string inspect() const override { return "false"; }
+    std::string inspect([[maybe_unused]]bool print_readably = false) const override { return "false"; }
 
     Type type() const override { return Type::False; }
 };
@@ -255,7 +301,7 @@ public:
         return type() == other.type();
     }
 
-    std::string inspect() const override { return "true"; }
+    std::string inspect([[maybe_unused]]bool print_readably = false) const override { return "true"; }
 
     Type type() const override { return Type::True; }
 };
@@ -274,7 +320,7 @@ public:
         return m_long == static_cast<MalInteger const&>(other).m_long;
     }
 
-    std::string inspect() const override { return std::to_string(value()); }
+    std::string inspect([[maybe_unused]]bool print_readably = false) const override { return std::to_string(value()); }
 
     Type type() const override { return Type::Integer; }
 
@@ -302,7 +348,7 @@ public:
 
     Type type() const override { return Type::Functiion; }
 
-    std::string inspect() const override { return "#<function>"; }
+    std::string inspect([[maybe_unused]]bool print_readably = false) const override { return "#<function>"; }
 
     MalFunctionPtr function_ptr() const { return  m_function_ptr; }
 

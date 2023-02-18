@@ -52,6 +52,8 @@ MalType* read_form(Reader& reader)
         return read_integer(reader);
     else if (token.at(0) == '"')
         return read_string(reader);
+    else if (token.at(0) == ':')
+        return read_keyword(reader);
     else
         return read_atom(reader);
 }
@@ -144,7 +146,13 @@ MalType* read_atom(Reader& reader)
 
 MalType* read_string(Reader& reader)
 {
-    return new MalString { reader.next() };
+    auto token = reader.next();
+    return new MalString { token.substr(1, token.size() - 2)};
+}
+
+MalType* read_keyword(Reader& reader)
+{
+    return new MalKeyword { reader.next() };
 }
 
 MalType* read_nil(Reader& reader)

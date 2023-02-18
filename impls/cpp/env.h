@@ -11,8 +11,16 @@ public:
     {
         if (!binds || !exprs)
             return;
-        for (std::size_t i = 0; i < binds->size(); ++i)
-            m_data.insert_or_assign(static_cast<MalSymbol*>(binds->at(i)), exprs->at(i));
+        for (std::size_t i = 0; i < binds->size(); ++i) {
+            if (binds->at(i)->inspect() == "&") {
+                auto * rest_of_exprs = new MalList();
+                for (std::size_t j = i; j < exprs->size(); ++j)
+                    rest_of_exprs->push(exprs->at(j));
+                set(static_cast<MalSymbol*>(binds->at(i+1)), rest_of_exprs);
+                break;
+            }
+            set(static_cast<MalSymbol*>(binds->at(i)), exprs->at(i));
+        }
     }
 
     void set(MalSymbol* key, MalType* value)

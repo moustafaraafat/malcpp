@@ -126,7 +126,7 @@ MalType* EVAL(MalType* ast, Env& env)
 
 std::string PRINT(MalType* input)
 {
-    return pr_str(input);
+    return pr_str(input, true);
 }
 
 std::string rep(std::string& input, Env& env)
