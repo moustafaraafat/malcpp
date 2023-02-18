@@ -21,7 +21,7 @@ public:
         False,
         True,
         Integer,
-        Functiion,
+        Function,
         String,
         Keyword
     };
@@ -346,7 +346,7 @@ public:
         return true;
     }
 
-    Type type() const override { return Type::Functiion; }
+    Type type() const override { return Type::Function; }
 
     std::string inspect([[maybe_unused]]bool print_readably = false) const override { return "#<function>"; }
 
