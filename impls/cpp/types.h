@@ -26,6 +26,24 @@ public:
         Keyword
     };
 
+    std::string type_as_string()
+    {
+        switch (type()) {
+        case Type::List: return "List";
+        case Type::Vector: return "Vector";
+        case Type::HashMap: return "HashMap";
+        case Type::Symbol: return "Symbol";
+        case Type::Nil: return "Nil";
+        case Type::False: return "False";
+        case Type::True: return "True";
+        case Type::Integer: return "Integer";
+        case Type::Function: return "Function";
+        case Type::String: return "String";
+        case Type::Keyword: return "Keyword";
+        default: return "Unkown!";
+        }
+    }
+
     virtual std::string inspect(bool print_readably = false) const = 0;
     virtual Type type() const = 0;
     virtual bool operator==(MalType const&) const = 0;
