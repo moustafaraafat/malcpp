@@ -50,9 +50,9 @@ MalType* read_form(Reader& reader)
         return read_true(reader);
     else if (is_number(token))
         return read_integer(reader);
-    else if (token.at(0) == '"')
+    else if (token[0] == '"')
         return read_string(reader);
-    else if (token.at(0) == ':')
+    else if (token[0] == ':')
         return read_keyword(reader);
     else
         return read_atom(reader);
@@ -188,5 +188,5 @@ MalType* read_integer(Reader& reader)
 bool is_number(std::string_view str)
 {
     // A naive way to test if str is a number
-    return (str.at(0) >= '0' && str.at(0) <= '9') || (str.at(0) == '-' && str.length() > 1 && (str.at(1) >= '0' && str.at(1) <= '9'));
+    return (str[0] >= '0' && str[0] <= '9') || (str[0] == '-' && str.length() > 1 && (str[1] >= '0' && str[1] <= '9'));
 }

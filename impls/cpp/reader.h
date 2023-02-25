@@ -24,7 +24,7 @@ public:
         auto input_view = std::string_view(m_input);
 
         while (m_index < m_input.length()) {
-            auto c = m_input.at(m_index);
+            auto c = m_input[m_index];
             switch (c) {
             case ' ':
             case '\t':
@@ -32,7 +32,7 @@ public:
             case ',':
                 break;
             case '~': {
-                if (m_index + 1 < m_input.length() && m_input.at(m_index + 1) == '@') {
+                if (m_index + 1 < m_input.length() && m_input[m_index + 1] == '@') {
                         m_index += 2;
                         return input_view.substr(m_index - 2, 2);
                 }
@@ -54,7 +54,7 @@ public:
                 ++m_index;
                 bool found_closing_quote = false;
                 while (!found_closing_quote && m_index < m_input.length()) {
-                    switch (m_input.at(m_index)) {
+                    switch (m_input[m_index]) {
                         case '\\':
                             switch (m_input.at(m_index + 1)) {
                                 case '"':
@@ -118,7 +118,7 @@ public:
                 auto first_index = m_index;
                 bool special_char_found = false;
                 while (!special_char_found && m_index < m_input.length()) {
-                    c = m_input.at(m_index);
+                    c = m_input[m_index];
                     switch (c) {
                     case ' ':
                     case '\t':
@@ -166,14 +166,14 @@ public:
     std::string_view next()
     {
         if (m_index < m_tokens.size())
-            return m_tokens.at(m_index++);
+            return m_tokens[m_index++];
         return {};
     }
 
     std::string_view peek()
     {
         if (m_index < m_tokens.size())
-            return m_tokens.at(m_index);
+            return m_tokens[m_index];
         return {};
     }
 
